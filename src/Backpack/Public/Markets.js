@@ -1,5 +1,5 @@
 import axios from 'axios';
-import Utils from '../../utils/Utils.js';
+import Utils from '../../Utils/Utils.js';
 
 class Markets {
 
@@ -107,7 +107,15 @@ class Markets {
     const timestamp = Date.now();
     const now = Math.floor(timestamp / 1000);
     const duration = Utils.getIntervalInSeconds(interval) * limit;
-    const startTime = now - duration;
+    let startTime = now - duration;
+    if (interval === '1month') {
+      // Calendar months have different lengths; begin at a UTC month boundary.
+      const start = new Date(timestamp);
+      start.setUTCDate(1);
+      start.setUTCHours(0, 0, 0, 0);
+      start.setUTCMonth(start.getUTCMonth() - limit);
+      startTime = Math.floor(start.getTime() / 1000);
+    }
     const endTime = now;
 
     const url = `${process.env.API_URL}/api/v1/klines`;

@@ -148,7 +148,7 @@ class Grid {
    }
 
   connectPrivate() {
-    this.wsPrivate = new WebSocket('wss://ws.backpack.exchange');
+    this.wsPrivate = new WebSocket(process.env.WS_URL || 'wss://ws.backpack.exchange');
 
     this.wsPrivate.on('open', () => {
       console.log('✅ Private WebSocket connected [Grid Mode]');
@@ -182,7 +182,7 @@ class Grid {
 
         if (parsed.stream === 'account.orderUpdate') {
           const event = parsed.data;
-          if (event.e === 'orderFill' || event.e === 'orderCancel') {
+          if (event.e === 'orderFill' || event.e === 'orderCancelled') {
             await this.handleOrderFill(parsed.data);
           }
         }
@@ -203,7 +203,7 @@ class Grid {
   }
 
   connectPublic() {
-    this.wsPublic = new WebSocket('wss://ws.backpack.exchange');
+    this.wsPublic = new WebSocket(process.env.WS_URL || 'wss://ws.backpack.exchange');
 
     this.wsPublic.on('open', () => {
       console.log('🌐 Public WebSocket connected [Grid Mode]');

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { auth } from './Authentication.js';
+import { serializeQuery } from '../Parameters.js';
 
 class History {
 
@@ -13,7 +14,7 @@ class History {
       if (offset) params.offset = offset;
       if (sortDirection) params.sortDirection = sortDirection;
       if (positionId) params.positionId = positionId;
-      if (sources) params.sources = sources;
+      if (sources) params.sources = Array.isArray(sources) ? sources.join(',') : sources;
 
     const headers = auth({
       instruction: 'borrowHistoryQueryAll',
@@ -24,6 +25,7 @@ class History {
     try {
       const response = await axios.get(`${process.env.API_URL}/wapi/v1/history/borrowLend`, {
         headers,
+        paramsSerializer: serializeQuery,
         params
       });
 
@@ -34,17 +36,17 @@ class History {
     }
   }
 
-  async getInterestHistory(symbol, type, limit, offset, sortDirection, positionId, sources) {
+  async getInterestHistory({ symbol, asset, limit, offset, sortDirection, positionId, source } = {}) {
     const timestamp = Date.now();
 
      const params = {};
       if (symbol) params.symbol = symbol;
-      if (type) params.type = type;
+      if (asset) params.asset = asset;
       if (limit) params.limit = limit;
       if (offset) params.offset = offset;
       if (sortDirection) params.sortDirection = sortDirection;
       if (positionId) params.positionId = positionId;
-      if (sources) params.sources = sources;
+      if (source) params.source = source;
 
     const headers = auth({
       instruction: 'interestHistoryQueryAll',
@@ -55,6 +57,7 @@ class History {
     try {
       const response = await axios.get(`${process.env.API_URL}/wapi/v1/history/interest`, {
         headers,
+        paramsSerializer: serializeQuery,
         params
       });
 
@@ -70,7 +73,7 @@ class History {
 
     const params = {};
     if (symbol) params.symbol = symbol;
-    if (side) params.type = type;
+    if (side) params.side = side;
     if (state) params.state = state;
     if (limit) params.limit = limit;
     if (offset) params.offset = offset;
@@ -85,6 +88,7 @@ class History {
     try {
       const response = await axios.get(`${process.env.API_URL}/wapi/v1/history/borrowLend/positions`, {
         headers,
+        paramsSerializer: serializeQuery,
         params
       });
 
@@ -118,6 +122,7 @@ class History {
   try {
     const response = await axios.get(`${process.env.API_URL}/wapi/v1/history/fills`, {
       headers,
+      paramsSerializer: serializeQuery,
       params,
     });
 
@@ -146,6 +151,7 @@ class History {
     try {
       const response = await axios.get(`${process.env.API_URL}/wapi/v1/history/funding`, {
         headers,
+        paramsSerializer: serializeQuery,
         params,
       });
 
@@ -176,6 +182,7 @@ class History {
     try {
       const response = await axios.get(`${process.env.API_URL}/wapi/v1/history/orders`, {
         headers,
+        paramsSerializer: serializeQuery,
         params,
       });
 
@@ -186,31 +193,33 @@ class History {
     }
   }
 
-  async getProfitAndLossHistory(subaccountId, symbol, limit, offset, sortDirection) {
+  async getPositionHistory({ symbol, state, marketType, limit, offset, sortDirection } = {}) {
     const timestamp = Date.now();
 
     const params = {};
-    if (subaccountId) params.subaccountId = subaccountId;
     if (symbol) params.symbol = symbol;
+    if (state) params.state = state;
+    if (marketType) params.marketType = marketType;
     if (limit) params.limit = limit;
     if (offset) params.offset = offset;
     if (sortDirection) params.sortDirection = sortDirection;
 
     const headers = auth({
-      instruction: 'pnlHistoryQueryAll',
+      instruction: 'positionHistoryQueryAll',
       timestamp,
       params,
     });
 
     try {
-      const response = await axios.get(`${process.env.API_URL}/wapi/v1/history/pnl`, {
+      const response = await axios.get(`${process.env.API_URL}/wapi/v1/history/position`, {
         headers,
+        paramsSerializer: serializeQuery,
         params,
       });
 
       return response.data;
     } catch (error) {
-      console.error('getProfitAndLossHistory - ERROR!', error.response?.data || error.message);
+      console.error('getPositionHistory - ERROR!', error.response?.data || error.message);
       return null;
     }
   }
@@ -234,6 +243,7 @@ class History {
     try {
       const response = await axios.get(`${process.env.API_URL}/wapi/v1/history/settlement`, {
         headers,
+        paramsSerializer: serializeQuery,
         params,
       });
 

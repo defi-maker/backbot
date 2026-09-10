@@ -36,7 +36,8 @@ class TrailingStopStream {
           const pnlRealized = Number(position.pnlRealized);
           const pnlUnrealized = Number(position.pnlUnrealized);
           const pnl = (pnlRealized + pnlUnrealized) - fee;
-          const qty = Number(position.netExposureQuantity)
+          const qty = Number(position.netQuantity)
+          if (qty === 0) continue;
           const isLong = parseFloat(position.netQuantity) > 0;
 
           this.positions[symbol] = {
@@ -61,6 +62,12 @@ class TrailingStopStream {
   
   async onPositionUpdate(data) {
     const symbol = data.s;
+    if (data.e === 'positionClosed' || Number(data.q) === 0) {
+      delete this.positions[symbol];
+      delete this.activeStops[symbol];
+      this.syncMarkPriceSubscriptions();
+      return;
+    }
     const account = await Cache.get();
 
     const markPrice = Number(data.M);
@@ -131,8 +138,6 @@ class TrailingStopStream {
 
   const openSymbols = Object.keys(this.positions); // símbolos com posições abertas
 
-  if (openSymbols.length === 0) return;
-
   // Verifica quais símbolos devem ser desinscritos
   const symbolsToUnsubscribe = [...this.subscribedSymbols].filter(symbol => !openSymbols.includes(symbol));
   const symbolsToSubscribe = openSymbols.filter(symbol => !this.subscribedSymbols.has(symbol));
@@ -166,7 +171,9 @@ class TrailingStopStream {
   }
 
   connectPrivate() {
-    this.wsPrivate = new WebSocket('wss://ws.backpack.exchange');
+    if (this.wsPrivate && this.wsPrivate.readyState <= WebSocket.OPEN) return;
+    clearTimeout(this.privateReconnectTimer);
+    this.wsPrivate = new WebSocket(process.env.WS_URL || 'wss://ws.backpack.exchange');
 
     this.wsPrivate.on('open', () => {
       console.log('✅ WebSocket privado conectado');
@@ -189,6 +196,7 @@ class TrailingStopStream {
       };
 
       this.wsPrivate.send(JSON.stringify(payload));
+      this.updatePositions().catch(err => console.error('Position sync failed:', err.message));
     });
 
     this.wsPrivate.on('message', async (raw) => {
@@ -219,20 +227,23 @@ class TrailingStopStream {
 
     this.wsPrivate.on('close', () => {
       console.log('🔌 WebSocket privado fechado. Reconectando...');
-      reconectPrivate()
+      this.reconectPrivate()
     });
 
     this.wsPrivate.on('error', (err) => {
       console.error('❌ Erro no WebSocket privado:', err);
-      reconectPrivate()
+      this.wsPrivate?.terminate();
     });
   }
 
   connectPublic() {
-    this.wsPublic = new WebSocket('wss://ws.backpack.exchange');
+    if (this.wsPublic && this.wsPublic.readyState <= WebSocket.OPEN) return;
+    clearTimeout(this.publicReconnectTimer);
+    this.wsPublic = new WebSocket(process.env.WS_URL || 'wss://ws.backpack.exchange');
 
     this.wsPublic.on('open', () => {
       console.log('✅ WebSocket público conectado');
+      this.subscribedSymbols.clear();
       this.syncMarkPriceSubscriptions();
     });
 
@@ -252,25 +263,25 @@ class TrailingStopStream {
 
     this.wsPublic.on('close', () => {
       console.log('🔌 WebSocket público fechado. Reconectando...');
-      reconectPublic()
+      this.reconectPublic()
     });
 
     this.wsPublic.on('error', (err) => {
       console.error('❌ Erro no WebSocket público:', err);
-      reconectPublic()
+      this.wsPublic?.terminate();
     });
   }
 
   reconectPrivate() {
-    this.wsPrivate?.terminate();
     this.wsPrivate = null;
-    setTimeout(() => this.connectPrivate(), 3000);
+    clearTimeout(this.privateReconnectTimer);
+    this.privateReconnectTimer = setTimeout(() => this.connectPrivate(), 3000);
   }
 
   reconectPublic() {
-    this.wsPublic?.terminate();
     this.wsPublic = null;
-    setTimeout(() => this.connectPublic(), 3000);
+    clearTimeout(this.publicReconnectTimer);
+    this.publicReconnectTimer = setTimeout(() => this.connectPublic(), 3000);
   }
 
   start() {

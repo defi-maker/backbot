@@ -10,6 +10,7 @@ import Futures from './src/Backpack/Authenticated/Futures.js';
 const Cache = new CacheController();
 
 dotenv.config();
+process.env.API_URL ||= 'https://api.backpack.exchange';
 
 const TRADING_STRATEGY = process.env.TRADING_STRATEGY
 const PREVIEW_FARM_LAST_HOURS = process.env.PREVIEW_FARM_LAST_HOURS

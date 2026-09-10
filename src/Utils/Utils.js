@@ -8,7 +8,7 @@ class Utils {
   getIntervalInSeconds(interval) {
     if (typeof interval !== 'string') return 60;
 
-    const match = interval.match(/^(\d+)([smhd])$/i);
+    const match = interval.match(/^(\d+)([smhdw])$/i);
     if (!match) return 60;
 
     const value = parseInt(match[1], 10);
@@ -19,6 +19,7 @@ class Utils {
       m: 60,
       h: 3600,
       d: 86400,
+      w: 604800,
     };
 
     return value * (unitToSeconds[unit] || 60);

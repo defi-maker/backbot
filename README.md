@@ -6,16 +6,22 @@ But if you know what you're doing, it might save you some time.
 # Steps
 In order to run the script you need to:
 
-* Install nodejs - https://nodejs.org/pt/download
+* Install Node.js 22 or newer and pnpm 10.
+* Run `pnpm install --frozen-lockfile --registry=https://registry.npmjs.org`. The existing SQLite dependency requires its native install script; it is allowed in `package.json`.
 * Create an subaccount in backpack exclusive for bot (low fund for risk)
 * Create API Key for backpack exchange subaccount
-* Configure the file .env with your setup, Save file.
-* Run in terminal npm start
+* For a new setup, copy `.env.example` to `.env` and configure it. Preserve an existing `.env`. Backpack keys and secrets are Base64 encoded; keep them out of version control.
+* Run `npm test` for offline tests and `pnpm check:api` for a credential-free check of SQLite, official public REST APIs and the public WebSocket.
+* Run `pnpm prod` to start the configured trading strategy, or `pnpm start` for development with automatic restarts.
+
+The API audit and migration details are in [docs/backpack-api-audit.md](docs/backpack-api-audit.md). `getProfitAndLossHistory(...)` has been replaced by `getPositionHistory({ ... })`, which returns the new position-history schema. `getInterestHistory` now takes an options object with `asset` and singular `source` filters.
 
 # Configs
 
 ## Global Configs
 
+* `API_URL` REST base URL, default `https://api.backpack.exchange` when starting the app.
+* `WS_URL` WebSocket base URL, default `wss://ws.backpack.exchange`.
 * `BACKPACK_API_KEY` Your Backpack Exchange API key.  
 * `BACKPACK_API_SECRET` Your Backpack Exchange API secret.  
 * `VOLUME_BY_POINT` Your average volume per point on Backpack. For example: `600`. The bot will understand that for every $600 traded, 1 point is gained, estimating progress.  
@@ -83,8 +89,10 @@ Places orders above and below the current price to create volume in sideways mar
 
 
 ```shell
-    npm install 
-    npm start
+    pnpm install --frozen-lockfile --registry=https://registry.npmjs.org
+    npm test
+    pnpm check:api
+    pnpm prod
 ```
 # Honorable Mention
 

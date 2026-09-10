@@ -11,16 +11,16 @@ class Order {
       return null;
     }
 
-    if (!orderId && !clientId) {
-      console.error('clientId or orderId is required');
+    if ((orderId != null) === (clientId != null)) {
+      console.error('Exactly one of clientId or orderId is required');
       return null;
     }
 
 
     const params = {}
     if (symbol) params.symbol = symbol;
-    if (orderId) params.orderId = orderId;
-    if (clientId) params.clientId = clientId;
+    if (orderId != null) params.orderId = orderId;
+    if (clientId != null) params.clientId = clientId;
 
     const headers = auth({
       instruction: 'orderQuery',
@@ -125,10 +125,15 @@ class Order {
       return null;
     }
 
+    if ((orderId != null) === (clientId != null)) {
+      console.error('Exactly one of clientId or orderId is required');
+      return null;
+    }
+
     const params = {}
     if (symbol) params.symbol = symbol;
-    if (orderId) params.orderId = orderId;
-    if (clientId) params.clientId = clientId;
+    if (orderId != null) params.orderId = orderId;
+    if (clientId != null) params.clientId = clientId;
 
     const headers = auth({
       instruction: 'orderCancel',

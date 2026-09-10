@@ -1,12 +1,12 @@
 import nacl from 'tweetnacl';
+import { parameterEntries } from '../Parameters.js';
 
 export function auth({ instruction, params = {}, timestamp, window = 10000 }) {
   const privateKeySeed = Buffer.from(process.env.BACKPACK_API_SECRET, 'base64'); 
   const keyPair = nacl.sign.keyPair.fromSeed(privateKeySeed);
 
-  const sortedParams = Object.keys(params)
-    .sort()
-    .map(key => `${key}=${params[key]}`)
+  const sortedParams = parameterEntries(params)
+    .map(([key, value]) => `${key}=${value}`)
     .join('&');
 
   const baseString = sortedParams ? `${sortedParams}&` : '';
